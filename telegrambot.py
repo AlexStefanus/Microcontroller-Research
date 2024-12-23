@@ -3,7 +3,6 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import requests
 
-# Konfigurasi logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -11,8 +10,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Konfigurasi
-BOT_TOKEN = "7944513778:AAHsvhbTlR3Ticn2L4S6nC-YYVltW4D-e1Q"
-FLASK_SERVER_URL = "http://192.168.0.101:5000/temperature"  # Sesuaikan dengan IP server Anda
+BOT_TOKEN = "contoh" # Sesuaikan dengan token dari bot telegram anda
+FLASK_SERVER_URL = "http://192.168.0.0:5000/temperature"  # Sesuaikan dengan IP Komputer yang menjalankan flask
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -24,7 +23,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def get_temperature(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # Gunakan requests biasa (bukan async)
         response = requests.get(FLASK_SERVER_URL)
         logger.info(f"Response from server: {response.text}")
 
@@ -48,14 +46,11 @@ async def get_temperature(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     try:
-        # Buat aplikasi
         application = Application.builder().token(BOT_TOKEN).build()
 
-        # Tambahkan handlers
         application.add_handler(CommandHandler("start", start))
         application.add_handler(CommandHandler("temperature", get_temperature))
 
-        # Jalankan bot
         logger.info("Starting bot...")
         application.run_polling()
 
