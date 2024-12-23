@@ -1,92 +1,32 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
 
 app = Flask(__name__)
 
-# Struktur data untuk menyimpan suhu dan timestamp
-temperature_data = {
-    'value': None,
-    'timestamp': None
-}
+# Variabel untuk menyimpan suhu
+current_temperature = None
 
 
 @app.route('/temperature', methods=['GET', 'POST'])
 def temperature():
-    global temperature_data
+    global current_temperature
+    print(f"Received request: Method={request.method}, Args={request.args}")  # Debugging
 
-    if request.method == 'POST':
-        try:
-            temp = request.args.get('temperature')
-            if temp is None:
-                return jsonify({"error": "Parameter temperature tidak ditemukan"}), 400
+    if request.method == 'GET':
+        temp = request.args.get('temperature')
+        if temp is not None:
+            # ESP32 mengirim data suhu
+            try:
+                current_temperature = float(temp)
+                return jsonify({"success": True, "temperature": current_temperature}), 200
+            except ValueError:
+                return jsonify({"error": "Invalid temperature value"}), 400
+        else:
+            # Bot Telegram meminta data suhu
+            if current_temperature is not None:
+                return jsonify({"temperature": current_temperature}), 200
+            else:
+                return jsonify({"error": "No temperature data available"}), 404
 
-            # Konversi ke float dan validasi
-            temp_float = float(temp)
-            if temp_float < -273.15:  # Validasi suhu tidak di bawah nol mutlak
-                return jsonify({"error": "Nilai suhu tidak valid"}), 400
-
-            temperature_data['value'] = temp_float
-            temperature_data['timestamp'] = datetime.now().isoformat()
-
-            return jsonify({"message": "Suhu berhasil disimpan", "data": temperature_data}), 200
-
-        except ValueError:
-            return jsonify({"error": "Nilai suhu harus berupa angka"}), 400
-
-    elif request.method == 'GET':
-        if temperature_data['value'] is None:
-            return jsonify({"error": "Belum ada data suhu"}), 404
-
-        return jsonify({
-            "temperature": temperature_data['value'],
-            "timestamp": temperature_data['timestamp']
-        }), 200
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
-from flask import Flask, request, jsonify
-from datetime import datetime
-
-app = Flask(__name__)
-
-# Struktur data untuk menyimpan suhu dan timestamp
-temperature_data = {
-    'value': None,
-    'timestamp': None
-}
-
-@app.route('/temperature', methods=['GET', 'POST'])
-def temperature():
-    global temperature_data
-
-    if request.method == 'POST':
-        try:
-            temp = request.args.get('temperature')
-            if temp is None:
-                return jsonify({"error": "Parameter temperature tidak ditemukan"}), 400
-
-            # Konversi ke float dan validasi
-            temp_float = float(temp)
-            if temp_float < -273.15:  # Validasi suhu tidak di bawah nol mutlak
-                return jsonify({"error": "Nilai suhu tidak valid"}), 400
-
-            temperature_data['value'] = temp_float
-            temperature_data['timestamp'] = datetime.now().isoformat()
-
-            return jsonify({"message": "Suhu berhasil disimpan", "data": temperature_data}), 200
-
-        except ValueError:
-            return jsonify({"error": "Nilai suhu harus berupa angka"}), 400
-
-    elif request.method == 'GET':
-        if temperature_data['value'] is None:
-            return jsonify({"error": "Belum ada data suhu"}), 404
-
-        return jsonify({
-            "temperature": temperature_data['value'],
-            "timestamp": temperature_data['timestamp']
-        }), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
